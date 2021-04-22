@@ -5,4 +5,10 @@ order: 4
 ---
 
 
-> **Note**: Add Markdown syntax content to file `_tabs/about.md` and it will show up on this page.
+> **주의**: 아직 공사중임을 알려드려요.
+
+초보 직장인입니다. <br>
+여러가지 게시물들을 연습해보고 올리려고 해요. <br>
+물론 이 문구도 조만간 다 엎어지겠지만..  <br>
+재밌네요..이거..
+ <br>
