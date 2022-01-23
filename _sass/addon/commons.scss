@@ -357,7 +357,7 @@ footer {
     word-wrap: break-word;
     img[data-src] {
         margin: 0.5rem 0;
-        max-width: 500px;
+        max-width: calc(100% - 100px);
     }
     @mixin img-caption {
         +em {
