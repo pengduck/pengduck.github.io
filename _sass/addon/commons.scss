@@ -357,6 +357,7 @@ footer {
     word-wrap: break-word;
     img[data-src] {
         margin: 0.5rem 0;
+        max-width: 500px;
     }
     @mixin img-caption {
         +em {
@@ -909,7 +910,7 @@ $sidebar-display: "sidebar-display";
     display: none;
     font-size: 1.1rem;
     font-weight: 600;
-    font-family: sans-serif;
+    font-family: "Maplestory";
     color: var(--topbar-text-color);
     text-align: center;
     width: 70%;
