@@ -357,7 +357,7 @@ footer {
     word-wrap: break-word;
     img[data-src] {
         margin: 0.5rem 0;
-        max-width: calc(100% - 100px);
+        max-width: calc(100% - 80px);
     }
     @mixin img-caption {
         +em {
@@ -560,6 +560,27 @@ footer {
 
 /* --- sidebar layout --- */
 
+@keyframes bounce-peng {
+    0% {
+        transform: scale(1, 1) translateY(0);
+    }
+    10% {
+        transform: scale(1.1, .9) translateY(0);
+    }
+    30% {
+        transform: scale(.9, 1.1) translateY(-15px);
+    }
+    45% {
+        transform: scale(1.1, .9) translateY(0);
+    }
+    60% {
+        transform: scale(1, 1) translateY(0);
+    }
+    100% {
+        transform: scale(1, 1) translateY(0);
+    }
+}
+
 $tab-count: 5 !default;
 $sidebar-display: "sidebar-display";
 #sidebar {
@@ -582,11 +603,16 @@ $sidebar-display: "sidebar-display";
     #avatar {
         &:hover>a {
             border-color: #fff;
+            animation-name: bounce-peng;
+            animation-timing-function: ease;
+            transform-origin: bottom;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
         }
         >a {
             display: block;
-            width: 6rem;
-            height: 6rem;
+            width: 6.5rem;
+            height: 6.5rem;
             border-radius: 50%;
             border: 2px solid #b6b6b6;
             overflow: hidden;
