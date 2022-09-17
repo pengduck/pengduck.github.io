@@ -72,13 +72,15 @@ h2 {
     @extend %section;
     @extend %anchor;
     font-size: 1.4rem;
+    color: var(--link-color);
 }
 
 h3 {
     @extend %heading;
     @extend %section;
     @extend %anchor;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
+    color: var(--link-color-temp);
 }
 
 h4 {
