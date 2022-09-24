@@ -13,6 +13,11 @@
     src: url('/assets/font/NanumGothic-Regular.ttf');
 }
 
+@font-face {
+    font-family: 'D2Coding';
+    src: url('/assets/font/D2Coding.ttf');
+}
+
 @mixin mode-toggle($dark-mode: false) {
     @if $dark-mode {
         @include dark-scheme;
