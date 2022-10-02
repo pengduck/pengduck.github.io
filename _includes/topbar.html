@@ -18,7 +18,7 @@
         {% if forloop.first %}
           {% unless page.layout == 'post' %}
           <span>
-            <a href="{{ '/' | relative_url }}">{{ 'Home' }}</a>
+            <a href="{{ '/' | relative_url }}?v={{site.time | date:'%s'}}">{{ 'Home' }}</a>
           </span>
           {% endunless %}
 
@@ -31,7 +31,7 @@
           {% if item == 'posts' and page.layout == 'post' %}
             {% assign url = '/' %}
           {% endif %}
-          <a href="{{ url | relative_url }}">
+          <a href="{{ url | relative_url }}?v={{site.time | date:'%s'}}">
             {{ item | capitalize }}
           </a>
         </span>

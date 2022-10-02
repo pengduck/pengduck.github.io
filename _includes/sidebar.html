@@ -6,7 +6,7 @@
 
     <div class="profile-wrapper text-center">
         <div id="avatar">
-            <a href="{{ '/' | relative_url }}" alt="avatar" class="mx-auto">
+            <a href="{{ '/' | relative_url }}?v={{site.time | date:'%s'}}" alt="avatar" class="mx-auto">
         {% capture avatar_url %}
           {%- if site.avatar contains '://' -%}
             {{ site.avatar }}
@@ -21,7 +21,7 @@
         </div>
 
         <div class="site-title mt-3">
-            <a href="{{ '/' | relative_url }}">{{- site.title -}}</a>
+            <a href="{{ '/' | relative_url }}?v={{site.time | date:'%s'}}">{{- site.title -}}</a>
         </div>
 
         <div class="site-subtitle font-italic">{{- site.tagline -}}</div>
@@ -32,7 +32,7 @@
     <ul class="w-100">
         <!-- home -->
         <li class="nav-item{% if page.layout == 'home' %}{{ " active " }}{% endif %}">
-            <a href="{{ '/' | relative_url }}" class="nav-link">
+            <a href="{{ '/' | relative_url }}?v={{site.time | date:'%s'}}" class="nav-link">
                 <i class="fa-fw fas fa-home ml-xl-3 mr-xl-3 unloaded"></i>
                 <span>{{ "HOME" }}</span>
             </a>
@@ -40,7 +40,7 @@
         <!-- the real tabs -->
         {% for tab in site.tabs %}
         <li class="nav-item{% if tab.url == page.url %}{{ " active " }}{% endif %}">
-            <a href="{{ tab.url | relative_url }}" class="nav-link">
+            <a href="{{ tab.url | relative_url }}?v={{site.time | date:'%s'}}" class="nav-link">
                 <i class="fa-fw {{ tab.icon }} ml-xl-3 mr-xl-3 unloaded"></i>
                 <span>{{ tab.title | upcase }}</span>
             </a>
