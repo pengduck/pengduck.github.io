@@ -252,63 +252,72 @@ int compare_and_swap(int *value, int expected, int new_value) {
 대개 카운터나 시퀀스 생성기와 같은 공유 데이터 한 에만 제한되어 사용되는 경우가 많다.
 
 
+## Mutex Locks
 
-```java
-public class Peterson1 {
-   static int count = 0;
-   static int turn = 0;
-   static boolean[] flag = new boolean[2];
+csp 해결을 위한 고급 레벨의 소프트웨어 툴 
 
-   public static void main(String[] args) throws Exception {
-      Thread t1 = new Thread(new Producer());
-      Thread t1 = new Thread(new Consumer());
-      t1.start(); t2.start();
-      t1.join(); t2.join();
-      System.out.println(peterson1.count);
+- 뮤텍스 락 : 동기화를 위한 가장 간단한 도구 2개 제어
+- 세마포어 : n개를 제어할 수 있어서 매우 편리
+- 모니터 : 뮤텍스와 세마포어의 단점을 극복 -> Java에서 사용 (wait, notify)
+- Liveness : 프로그레스? 데드락 문제 해결
 
-   }
+> Mutex : **mut**ual **ex**clusion 상호 배제
 
-   static class Producer implements Runnable {
-      @Override
-      public void run() {
-         for (int k=0; k<10000; k++) {
-            /* entry section */
-            flag[0] = true;
-            turn = 1;
-            while (flag[1] && turn == 1)
-               ;
-            
-            /* critical section */
-            count++;
+임계 영역을 보호하고 경쟁 상태, 공용 자원 엑세스를 방지한다. lock을 사용한다. cs에 진입하기 위해 lock을 획득하는 과정과 exit할 때 release (반납)하는 과정이 있다.
 
-            /* exit section */
-            flag[0] = false;
+`acquire()`, `release()` 두개의 함수 제공
+available이라는 boolean variable 이용해서 lock을 결정
 
-            /* remainder section */
-         }
-      }
-   }
+```c
+acquire() {
+   while (!available)
+      ; /* busy wait */
+   avavilable = false;
+}
 
-   static class Consumer implements Runnable {
-      @Override
-      public void run() {
-         for (int k=0; k<10000; k++) {
-            /* entry section */
-            flag[1] = true;
-            turn = 0;
-            while (flag[0] && turn == 0)
-               ;
-            
-            /* critical section */
-            count--;
-
-            /* exit section */
-            flag[1] = false;
-
-            /* remainder section */
-         }
-      }
-   }
+release() {
+   available = true;
 }
 ```
+
+이 두 과정도 원자적으로 실행되어야 한다.
+
+하지만 문제가 있다.
+바쁜 대기 Busy waiting 문제 : 임계구역 들어가기 전에 acquire() 반복문의 무한 루프를 도는 현상, cpu 자원을 계속 먹는다.
+
+스핀락(spinlock) ; busy wait를 하는 락 유형. 공회전. 유용할 때가 있다. cpu 코어가 여러개인 경우 꼭 나쁘진 않다. 문맥 교환이 일어나지 않기에 해당 시간을 절약할 수 있다.
+
+<br>
+
+## 세마포 Semaphores
+
+신호장치, 신호기. N개의 프로세스가 있는 경우 사용한다.
+
+세마포 정의 : 그냥 정수. 초기화를 어떻게 하냐에 따라 두개의 standard atomic operations가 있다. : wait(), signal() 혹은 P(), V()
+
+Proberen(to test) Verhogen(to increment)
+
+```c
+wait(S) {
+   while (S <= 0)
+      ; // busy wait
+   S--;
+}
+
+signal(S) {
+   S++;
+}
+```
+
+이것도 둘다 atomic 하게 구현되어야 함. 정수를 사용하여 n개의 인스턴스를 가진 자원을 써먹을 수 있다.
+
+- binary semaphore : 0하고 1만 왔다갔다. 뮤텍스 락 하고 같다.
+- Counting semaphore : 무한대로 늘어날 수 있다. 여러개의 인스턴스를 가진 자원
+
+
+resource가 available한 개수로 초기화를 한다. 리소스를 사용하려면 wait()를 사용 count를 감소, 리소스를 다 썼으면 signal()을 사용 count를 증가
+
+> count가 0인 상태에서는 모든 리소스가 사용중이라는 것
+
+이것도 busy waiting 문제가 있다. 이 문제를 해결하려면 wait()를 할 때 while문을 돌지 말고 waiting queue에 들어가면 된다.
 
