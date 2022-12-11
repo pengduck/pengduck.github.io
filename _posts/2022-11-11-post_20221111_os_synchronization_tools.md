@@ -265,7 +265,7 @@ csp 해결을 위한 고급 레벨의 소프트웨어 툴
 
 임계 영역을 보호하고 경쟁 상태, 공용 자원 엑세스를 방지한다. lock을 사용한다. cs에 진입하기 위해 lock을 획득하는 과정과 exit할 때 release (반납)하는 과정이 있다.
 
-`acquire()`, `release()` 두개의 함수 제공
+락을 획득하고 반환하는 `acquire()`, `release()` 두개의 함수 제공
 available이라는 boolean variable 이용해서 lock을 결정
 
 ```c
@@ -280,20 +280,21 @@ release() {
 }
 ```
 
-이 두 과정도 원자적으로 실행되어야 한다.
+이 두 과정도 원자적으로 실행되어야 한다. 
 
-하지만 문제가 있다.
-바쁜 대기 Busy waiting 문제 : 임계구역 들어가기 전에 acquire() 반복문의 무한 루프를 도는 현상, cpu 자원을 계속 먹는다.
-
-스핀락(spinlock) ; busy wait를 하는 락 유형. 공회전. 유용할 때가 있다. cpu 코어가 여러개인 경우 꼭 나쁘진 않다. 문맥 교환이 일어나지 않기에 해당 시간을 절약할 수 있다.
+하지만 `바쁜 대기 (Busy waiting)` 문제가 여전히 존재; 임계구역 들어가기 전에 `acquire()` 반복문의 무한 루프를 도는 현상, cpu 자원을 계속 먹는다.
+ `스핀락(spinlock)`은 busy wait를 하는 락 유형이다. CPU 코어가 여러개인 경우 문맥 교환이 일어나지 않기에 해당 시간을 절약할 수 있다.
 
 <br>
 
 ## 세마포 Semaphores
 
-신호장치, 신호기. N개의 프로세스가 있는 경우 사용한다.
+신호장치, 신호기.
 
-세마포 정의 : 그냥 정수. 초기화를 어떻게 하냐에 따라 두개의 standard atomic operations가 있다. : wait(), signal() 혹은 P(), V()
+- binary semaphore : 0하고 1만 왔다갔다, 뮤텍스 락 하고 같다.
+- Counting semaphore : 무한대로 늘어날 수 있다. 여러개의 인스턴스를 가진 자원
+
+함수는 `wait()`, `signal()` 혹은 `P()`, `V()`
 
 Proberen(to test) Verhogen(to increment)
 
@@ -311,13 +312,213 @@ signal(S) {
 
 이것도 둘다 atomic 하게 구현되어야 함. 정수를 사용하여 n개의 인스턴스를 가진 자원을 써먹을 수 있다.
 
-- binary semaphore : 0하고 1만 왔다갔다. 뮤텍스 락 하고 같다.
-- Counting semaphore : 무한대로 늘어날 수 있다. 여러개의 인스턴스를 가진 자원
-
-
 resource가 available한 개수로 초기화를 한다. 리소스를 사용하려면 wait()를 사용 count를 감소, 리소스를 다 썼으면 signal()을 사용 count를 증가
 
 > count가 0인 상태에서는 모든 리소스가 사용중이라는 것
 
 이것도 busy waiting 문제가 있다. 이 문제를 해결하려면 wait()를 할 때 while문을 돌지 말고 waiting queue에 들어가면 된다.
 
+<br>
+
+## 모니터 _ Monitors
+
+뮤텍스와 세마포어가 편리하지만 *타이밍 오류*가 자주 발생한다. 특정한 시퀀스를 잘못 쓰면 항상 일어나지도 않고 잡기 어려운 문제가 발생한다. 가령 연산의 순서가 바뀔 경우 상호 배제가 지켜지지 않는 현상이 발생할 수 있는데, 이런 상황이 언제나 재현 가능하지도 않다.
+
+문제를 낮출 방법. 심플한 동기화 툴을 사용하자. 모니터는 에러가 잘 발생하지 않는 기법이다.
+
+
+### 모니터 사용법 _ Usage
+
+초상화된 데이터 형 `ADT (abstract data type)` 은 데이터와 데이터 조작 함수 집합을 하나의 단위로 묶어 보호한다. 즉 상호 배제 자체의 틀을 제공하며, 
+variable을 선언하고 거기에 define된 인스턴스를 호출하도록 한다. 자체적으로 하면 약간 부족해서, conditional variable을 도입한다.
+
+```java
+condition x, y;
+x.wait(); x.signal();
+y.wait(); y.signal();
+```
+
+각각의 conditional 변수에 호출될 수 있는 연산은 wait()와 signal()이다. wait() 를 호출한 프로세스는 다른 프로세스가 signal()을 호출할 때까지 기다린다.
+
+
+### Java Monitors
+
+자바에서는 monitor-lock 혹은 intrinsic-lock을 제공한다. 기본 단위가 thread이므로 thread synchronization을 구현
+
+synchronized keyword : 임계영역에 해당하는 코드 블록을 선언할 때 사용하는 자바 키워드
+해당 코드 블록(임계영역)에는 모니터락을 획득해야 진입 가능
+모니터락을 가진 객체 인스턴스를 지정할 수 있음
+메소드에 선언하면 메소드 코드 블록 저체가 임계영역으로 지정됨
+ - 이 때, 모니터락을 가진 객체 인스턴스는 this 객체 인스턴스임
+
+
+```java
+synchronized (object) { // 이 때 object는 모니터락
+   //critical section
+} // 임계영역만 정해주면 나머지 엔트리 섹션 등은 자바가 알아서 해주겠다.
+
+public synchronized void add() {
+   //critical section
+} // 메소드를 호출할 때는 this객체의 모니터락을 획득하고 진입했다가 나올 때 반납하면 된다.
+```
+
+wait() notify() 메소드
+java.lang.Object 클래스에 선언됨 : 모든 자바 객체가 가진 메소드임
+wait:wait, notify:signal
+스레드가 어떤 객체의 wait() 메소드를 호출하면
+ - 해당 객체의 모니터락을 획득하기 위해 대기 상태로 진입함.
+스레드가 어떤 객체의 notify() 메소드를 호출하면
+ - 해당 객체 모니터에 대기중인 스레드 하나를 깨움.
+notify() 대힌에 notifyAll() 메소드를 호출하면
+ - 해당 객체 모니터에 대기중인 스레드 전부를 깨움 -> 모두가 레디 큐에 들어갔다가 하나만 실행, 나머지는 다시 대기
+
+```java
+public class SynchExample1 {
+   static class Counter {
+      public static int count = 0;
+      public static void increment() {
+         count++;
+      }
+   }
+
+   static class MyRunnable implements Runnable {
+      @Override
+      public void run() {
+         for (int i=0; i<10000; i++)
+            Counter.increment();
+      }
+   }
+
+   public static void main(String[] args) throws Exception {
+      Thread[] threads = new Thread[5];
+      for (int i=0; i<threads.length; i++) {
+         threads[i] = new Thread(new MyRunnable());
+         threads[i].start();
+      }
+      for (int i=0; i<threads.length; i++) {
+         threads[i].join();
+      }
+      System.out.println("counter = " + Counter.count);
+   }
+}
+```
+
+race condition이 발생해 50000근처에도 못간다.
+
+
+```java
+public class SynchExample2 {
+   static class Counter {
+      public static int count = 0;
+      synchronized public static void increment() {
+         count++;
+      } // synchronized 만 선언해도 임계영역이 된다.
+   }
+
+   static class MyRunnable implements Runnable {
+      @Override
+      public void run() {
+         for (int i=0; i<10000; i++)
+            Counter.increment();
+      }
+   }
+
+   public static void main(String[] args) throws Exception {
+      Thread[] threads = new Thread[5];
+      for (int i=0; i<threads.length; i++) {
+         threads[i] = new Thread(new MyRunnable());
+         threads[i].start();
+      }
+      for (int i=0; i<threads.length; i++) {
+         threads[i].join();
+      }
+      System.out.println("counter = " + Counter.count);
+   }
+}
+```
+
+아주 잘된다. 편하긴 하지만 허나 남발하면 임계영역 구간이 길어지며 동기화되면 멀티스레딩의 장점이 사라진다.
+
+```java
+   static class Counter {
+      private static Object object = new Object();
+      public static int count = 0;
+      public static void increment() {
+         synchronized(object) {
+            count++;
+         } // 멍따 object 선언해서 락을 주자.
+      }
+   }
+```
+
+```java
+public class SynchExample4 {
+   static class Counter {
+      public static int count = 0; // 공유
+      public void increment() {
+         synchronized (this) {
+            Counter.count++;
+         } // 자기 객체 인스턴스의 monitor lock을 획득해서 증가시켜라
+      }
+   }
+
+   static class MyRunnable implements Runnable {
+      Counter counter;
+      public MyRunnable(Counter counter) {
+         // 생성자자
+         this.counter = counter;
+      }
+      @Override
+      public void run() {
+         for (int i=0; i<10000; i++)
+            counter.increment();
+      }
+   }
+
+   public static void main(String[] args) throws Exception {
+      Thread[] threads = new Thread[5];
+      for (int i=0; i<threads.length; i++) {
+         threads[i] = new Thread(new MyRunnable(new Counter())); // 카운터 인스턴스 선언 (5개, static int count를 공유)
+         threads[i].start();
+      }
+      for (int i=0; i<threads.length; i++) {
+         threads[i].join();
+      }
+      System.out.println("counter = " + Counter.count);
+   }
+}
+```
+또 동기화 문제 발생 : this가 각각의 인스턴스라서 그렇다 (5개) : lock이 달라서
+
+해결책
+
+```Java
+   public static void main(String[] args) throws Exception {
+      Thread[] threads = new Thread[5];
+      Counter counter = new Counter();
+      for (int i=0; i<threads.length; i++) {
+         threads[i] = new Thread(new MyRunnable(counter)); // 카운터 인스턴스 하나로 다섯개 스레드가 돈다 this (lock)가 하나가 된다.
+         threads[i].start();
+      }
+      for (int i=0; i<threads.length; i++) {
+         threads[i].join();
+      }
+      System.out.println("counter = " + Counter.count);
+   }
+```
+
+<br>
+
+## 라이브니스 _ Liveness
+
+mutex, semaphore 등은 상호 배제만 보장하지 deadlock과 starvation 문제를 해결해주진 못한다. 라이브니스는 프로세스 실행 수명주기동안 진행을 보장하기 위해 시스템이 충족해야 하는 속성을 뜻한다. 일종의 약속인듯
+
+라이브니스 실패로 이어질 수 있는 상황은 다음과 같다.
+
+### 교착 상태 _ Deadlock
+
+두개 이상의 프로세스가 영원히 기다리는 상태로, 대기 중인 프로세스 중 하나에 의해서만 야기될 수 있는 이벤트를 무한정 기다린다.
+
+### 우선순위 역전 _ Priority Inversion
+
+우선순위가 높은 프로세스가 낮은 프로세스에게 밀리는 현상 : 커널 데이터는 락에 의해 보호되기 때문에, 낮은 우선순위 프로세스가 자원 사용을 마칠 때 까지 높은 프로시스가 기다리게 된다. 우선순위 상속 프로토콜 (priority-inheritance protocol) 을 구현하여 해결한다.
