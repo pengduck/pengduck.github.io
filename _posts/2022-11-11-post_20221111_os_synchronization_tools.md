@@ -259,14 +259,13 @@ csp 해결을 위한 고급 레벨의 소프트웨어 툴
 - 뮤텍스 락 : 동기화를 위한 가장 간단한 도구 2개 제어
 - 세마포어 : n개를 제어할 수 있어서 매우 편리
 - 모니터 : 뮤텍스와 세마포어의 단점을 극복 -> Java에서 사용 (wait, notify)
-- Liveness : 프로그레스? 데드락 문제 해결
+- Liveness : 프로그레스, 데드락 문제 해결
 
 > Mutex : **mut**ual **ex**clusion 상호 배제
 
 임계 영역을 보호하고 경쟁 상태, 공용 자원 엑세스를 방지한다. lock을 사용한다. cs에 진입하기 위해 lock을 획득하는 과정과 exit할 때 release (반납)하는 과정이 있다.
 
-락을 획득하고 반환하는 `acquire()`, `release()` 두개의 함수 제공
-available이라는 boolean variable 이용해서 lock을 결정
+락을 획득하고 반환하는 `acquire()`, `release()` 두개의 함수 제공, available이라는 boolean variable 이용해서 lock을 결정
 
 ```c
 acquire() {
@@ -329,13 +328,15 @@ resource가 available한 개수로 초기화를 한다. 리소스를 사용하�
 
 ### 모니터 사용법 _ Usage
 
-초상화된 데이터 형 `ADT (abstract data type)` 은 데이터와 데이터 조작 함수 집합을 하나의 단위로 묶어 보호한다. 즉 상호 배제 자체의 틀을 제공하며, 
+추상화된 데이터 형 `ADT (abstract data type)` 은 데이터와 데이터 조작 함수 집합을 하나의 단위로 묶어 보호한다. 즉 상호 배제 자체의 틀을 제공하며, 
 variable을 선언하고 거기에 define된 인스턴스를 호출하도록 한다. 자체적으로 하면 약간 부족해서, conditional variable을 도입한다.
 
 ```java
 condition x, y;
-x.wait(); x.signal();
-y.wait(); y.signal();
+x.wait(); // 을 호출 하면
+x.signal(); // 다른 프로세스가 이것을 호출할때까지 일시중지된다.
+y.wait();
+y.signal();
 ```
 
 각각의 conditional 변수에 호출될 수 있는 연산은 wait()와 signal()이다. wait() 를 호출한 프로세스는 다른 프로세스가 signal()을 호출할 때까지 기다린다.
@@ -345,12 +346,11 @@ y.wait(); y.signal();
 
 자바에서는 monitor-lock 혹은 intrinsic-lock을 제공한다. 기본 단위가 thread이므로 thread synchronization을 구현
 
-synchronized keyword : 임계영역에 해당하는 코드 블록을 선언할 때 사용하는 자바 키워드
-해당 코드 블록(임계영역)에는 모니터락을 획득해야 진입 가능
-모니터락을 가진 객체 인스턴스를 지정할 수 있음
-메소드에 선언하면 메소드 코드 블록 저체가 임계영역으로 지정됨
- - 이 때, 모니터락을 가진 객체 인스턴스는 this 객체 인스턴스임
+- synchronized keyword : 임계영역에 해당하는 코드 블록을 선언할 때 사용하는 자바 키워드
 
+해당 코드 블록(임계영역)에는 모니터락을 획득해야 진입 가능하며, 모니터락을 가진 객체 인스턴스를 지정할 수 있다. 메소드에 선언하면 메소드 코드 블록 저체가 임계영역으로 지정된다.
+
+ - 이 때, 모니터락을 가진 객체 인스턴스는 this 객체 인스턴스임
 
 ```java
 synchronized (object) { // 이 때 object는 모니터락
@@ -362,15 +362,12 @@ public synchronized void add() {
 } // 메소드를 호출할 때는 this객체의 모니터락을 획득하고 진입했다가 나올 때 반납하면 된다.
 ```
 
-wait() notify() 메소드
-java.lang.Object 클래스에 선언됨 : 모든 자바 객체가 가진 메소드임
-wait:wait, notify:signal
-스레드가 어떤 객체의 wait() 메소드를 호출하면
- - 해당 객체의 모니터락을 획득하기 위해 대기 상태로 진입함.
-스레드가 어떤 객체의 notify() 메소드를 호출하면
- - 해당 객체 모니터에 대기중인 스레드 하나를 깨움.
-notify() 대힌에 notifyAll() 메소드를 호출하면
- - 해당 객체 모니터에 대기중인 스레드 전부를 깨움 -> 모두가 레디 큐에 들어갔다가 하나만 실행, 나머지는 다시 대기
+`wait()` `notify()` 메소드
+- java.lang.Object 클래스에 선언됨 : 모든 자바 객체가 가진 메소드임
+- wait:wait, notify:signal
+- 스레드가 어떤 객체의 wait() 메소드를 호출하면 해당 객체의 모니터락을 획득하기 위해 대기 상태로 진입함.
+- 스레드가 어떤 객체의 notify() 메소드를 호출하면 해당 객체 모니터에 대기중인 스레드 하나를 깨움.
+- notify() 대힌에 notifyAll() 메소드를 호출하면 해당 객체 모니터에 대기중인 스레드 전부를 깨움 -> 모두가 레디 큐에 들어갔다가 하나만 실행, 나머지는 다시 대기
 
 ```java
 public class SynchExample1 {
@@ -465,7 +462,7 @@ public class SynchExample4 {
    static class MyRunnable implements Runnable {
       Counter counter;
       public MyRunnable(Counter counter) {
-         // 생성자자
+         // 생성자
          this.counter = counter;
       }
       @Override
@@ -488,9 +485,9 @@ public class SynchExample4 {
    }
 }
 ```
-또 동기화 문제 발생 : this가 각각의 인스턴스라서 그렇다 (5개) : lock이 달라서
+또 동기화 문제 발생 : this가 각각의 인스턴스라서 그렇다 (5개) : lock이 달라서, counter가 새로 생성되어서
 
-해결책
+> 해결책
 
 ```Java
    public static void main(String[] args) throws Exception {
@@ -515,10 +512,6 @@ mutex, semaphore 등은 상호 배제만 보장하지 deadlock과 starvation 문
 
 라이브니스 실패로 이어질 수 있는 상황은 다음과 같다.
 
-### 교착 상태 _ Deadlock
+- 교착 상태 (Deadlock) :두개 이상의 프로세스가 영원히 기다리는 상태로, 대기 중인 프로세스 중 하나에 의해서만 야기될 수 있는 이벤트를 무한정 기다린다.
 
-두개 이상의 프로세스가 영원히 기다리는 상태로, 대기 중인 프로세스 중 하나에 의해서만 야기될 수 있는 이벤트를 무한정 기다린다.
-
-### 우선순위 역전 _ Priority Inversion
-
-우선순위가 높은 프로세스가 낮은 프로세스에게 밀리는 현상 : 커널 데이터는 락에 의해 보호되기 때문에, 낮은 우선순위 프로세스가 자원 사용을 마칠 때 까지 높은 프로시스가 기다리게 된다. 우선순위 상속 프로토콜 (priority-inheritance protocol) 을 구현하여 해결한다.
+- 우선순위 역전 (Priority Inversion) : 우선순위가 높은 프로세스가 낮은 프로세스에게 밀리는 현상 : 커널 데이터는 락에 의해 보호되기 때문에, 낮은 우선순위 프로세스가 자원 사용을 마칠 때 까지 높은 프로시스가 기다리게 된다. 우선순위 상속 프로토콜 (priority-inheritance protocol) 을 구현하여 해결한다.
