@@ -1,9 +1,9 @@
 ---
 title: 교착 상태 (Deadlocks)
 author: 펭덕
-date: 2022-12-25 14:55:00 +0900
+date: 2023-01-15 18:45:00 +0900
 categories: [CS지식, OS]
-tags: [공룡책, OS, Operating System, 운영체제, Computer, 컴퓨터, 동기화]
+tags: [공룡책, OS, Operating System, 운영체제, 데드락, Deadlock, 교착상태]
 math: true
 mermaid: true
 image:
