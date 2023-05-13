@@ -1,14 +1,17 @@
 ---
-title: 카프카 클러스터(Kafka Cluster) - failover
+title: 카프카 클러스터 (Kafka Cluster) - failover
 author: 펭덕
 date: 2023-04-26 20:45:00 +0900
 categories: [Dev, Tips]
-tags: [Kafka, Cluster, External, Properties]
+tags: [Kafka, Cluster, Failover, Topic]
 math: true
 mermaid: true
 image:
-   src: 
+   src: https://github.com/pengduck/pengduck.github.io/assets/82709090/384595a8-1066-4ea8-969e-2d09b1222c8b
 ---
+
+
+## 뭐야 왜 하나 뻗으니 전부 다 작동안해?
 
 카프카를 클러스터로 구성했으니 마땅히 하나가 뻗으면 나머지가 제 역할을 수행해 줄 것이라 굳게 믿고 있었으나 뒤통수를 맞고 말았다..  하나가 죽었는데 producing, consuming이 모두 뻗어버리고 만 것이다.
 
@@ -21,20 +24,28 @@ image:
 
 토픽을 describe 하고 여기서 봐야 하는 것이 파티션 정보. 각 팔로워가 해당 파티션을 모두 가지고 있어야 하는 것이다. 내 경우에는 성능을 위해 파티션을 꽤 많이 만들어두었었는데, 파티션을 골고루..가지고 있었다. 하나만 죽어도 정합성이 깨져 전체가 먹통이 되어버리는 것이다.
 
+<br>
+
+## 살려야한다
+
 이를 예방하기 위한 방법으로 두 가지가 있다. 가령 3개로 클러스터를 구성한다고 한다면,
 
-- properties에 default.replication.factor 옵션을 주고 실행 후 토픽 만들기
+### properties에 default.replication.factor 옵션을 주고 실행 후 토픽 만들기
+
 ```
 # kafka // server.properties
 default.replication.factor=3
 ```
 
-- 토픽 생성시 옵션을 주는 방법
+### 토픽 생성시 옵션을 주는 방법
+
 ```shell
 ./bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 3 --partitions 3 --topic test
 ```
 
 클러스터가 3개인 경우 복제 factor를 3개 두어서 토픽을 만들 때 모두 복제하게끔 설정하는 것이다. 그러나 이것은 그저 예방의 방법. 이미 토픽을 생성한 뒤에 외양간이라도 고치려면(뒤늦게 복제를 행하려면) 약간 번거로운 방법을 행해야 한다.
+
+### 이미 만들어진 토픽은?
 
 ```
 [{"topic":"test", "partition": "0", "replicas":{0,1,2}},
